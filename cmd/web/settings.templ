@@ -1,0 +1,95 @@
+package web
+
+import "fmt"
+import "git.itsigo.dev/istigo/pocketmovie/internal/database"
+import "git.itsigo.dev/istigo/pocketmovie/internal/apis"
+
+type SettingsConfig struct {
+	Providers          []database.StreamingService
+	AvailableProviders []string
+	Regions            []apis.Region
+	SelectedRegion     string
+	APIKey             string
+}
+
+templ Settings(settings SettingsConfig) {
+	@Base("Settings - PocketMovie") {
+		<h1>Settings</h1>
+		<div class="grid">
+			<div>
+				<h3>Stream Region</h3>
+				@Region(settings)
+				<h3>Stream Providers</h3>
+				@ProviderTable(settings)
+			</div>
+			<div>
+				<h3>API Token</h3>
+				@ApiKey(settings)
+			</div>
+		</div>
+	}
+}
+
+templ ApiKey(settings SettingsConfig) {
+	<form id="apikeyinput">
+		<fieldset role="group">
+			<input type="text" value={ settings.APIKey } name="apikey" placeholder="TMDB Read Access Token"/>
+			<input type="submit" value="Change" data-on-click="@post('/db/updateApiKey', {contentType: 'form'})"/>
+		</fieldset>
+	</form>
+}
+
+templ ProviderTable(settings SettingsConfig) {
+	<div id="providers">
+		<table class="striped">
+			<tr>
+				<th>Name</th>
+				<th></th>
+			</tr>
+			for _, p := range(settings.Providers) {
+				<tr>
+					<td>{ p.Title }</td>
+					<td class="center">
+						<a
+							class="red-link"
+							href="#"
+							data-on-click={ fmt.Sprintf("confirm('Are you sure?') && @delete('/db/deleteStreamingService/%d')", p.ID) }
+						>Delete</a>
+					</td>
+				</tr>
+			}
+		</table>
+		<form>
+			<fieldset role="group">
+				<select name="service" aria-label="Services" required>
+					<option selected disabled value="">Select</option>
+					for _, p := range(settings.AvailableProviders) {
+						<option>{ p }</option>
+					}
+				</select>
+				<input type="submit" value="Add" data-on-click="@post('/db/addStreamingService', {contentType: 'form'})"/>
+			</fieldset>
+		</form>
+	</div>
+}
+
+templ Region(settings SettingsConfig) {
+	<form id="regionselector">
+		<fieldset role="group">
+			<select
+				data-on-change={ fmt.Sprintf("@post('/db/updateRegion', {contentType: 'form'})") }
+				name="region"
+				aria-label="Regions"
+			>
+				for _, r := range(settings.Regions) {
+					<option
+						if settings.SelectedRegion == r.Iso {
+							selected
+						}
+						value={ r.Iso }
+					>{ r.EnglishName }</option>
+				}
+			</select>
+		</fieldset>
+	</form>
+}

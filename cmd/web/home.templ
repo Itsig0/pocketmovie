@@ -1,0 +1,138 @@
+package web
+
+import "git.itsigo.dev/istigo/pocketmovie/internal/database"
+import "strings"
+import "fmt"
+
+func getConfVal(settings []database.Setting, name string) string {
+	for _, s := range settings {
+		if s.Name == name {
+			return s.Value
+		}
+	}
+	return ""
+}
+
+templ Show(movies []database.Movie, settings []database.Setting) {
+	@Base("Movies - PocketMovie") {
+		//<pre id="data"></pre>
+		//<script>
+		//    var data = JSON.parse({{ data }});
+		//    var formated_data = JSON.stringify(data, null, 2);
+		//    document.getElementById("data").textContent = formated_data;
+		//</script>
+		@addMovieButton()
+		{{ list, grid := "1", "" }}
+		if getConfVal(settings, "HOME_GRID_VIEW" ) == "true" {
+			{{ list, grid = "", "1" }}
+		}
+		<div
+			data-signals={ fmt.Sprintf("{list : '%s', grid : '%s'}", list, grid) }
+			style="float:right"
+		>
+			<button
+				data-show="$list != ''"
+				data-on-click="
+                @post('/db/updateTableView')
+                $list = '';
+                $grid = '1'
+                "
+			>List &#9776;</button>
+			<button
+				data-show="$grid != ''"
+				data-on-click="
+                @post('/db/updateTableView')
+                $list = '1';
+                $grid = ''
+                "
+			>Grid 田</button>
+		</div>
+		if grid != "" {
+			@MovieTiles(movies)
+		} else {
+			@MovieList(movies)
+		}
+	}
+}
+
+templ MovieList(movies []database.Movie) {
+	<table id="movie-list" class="striped">
+		<tr>
+			<th>Titel</th>
+			<th>Year</th>
+			<th>Rating</th>
+			<th>Watched</th>
+			<th>Owned</th>
+			<th></th>
+		</tr>
+		for _, item := range movies {
+			<tr>
+				<td><a href={ fmt.Sprintf("/movie/%d", item.ID) }>{ item.Title }</a></td>
+				<td>{ strings.Split(item.Year, "-")[0] }</td>
+				<td>
+					<div class="listRating">
+						{{ class := "icon star-full" }}
+						for i := range(5) {
+							<i
+								if int64(i) < item.Rating {
+									class={ class + " rated" }
+								} else {
+									class={ class }
+								}
+							></i>
+						}
+					</div>
+				</td>
+				{{ statusClasses := "bg-red" }}
+				if item.Status == 1 {
+					{{ statusClasses = "bg-green" }}
+				}
+				<td
+					class={ statusClasses }
+				>
+					{ item.Status != 0 }
+				</td>
+				{{ ownedClasses := "bg-red" }}
+				if item.Owned == 1 {
+					{{ ownedClasses = "bg-green" }}
+				}
+				<td
+					class={ ownedClasses }
+				>
+					{ item.Owned != 0 }
+				</td>
+				<td>
+					<a
+						class="red-link"
+						href="#"
+						data-on-click={ fmt.Sprintf("confirm('Are you sure?') && @delete('/db/deleteMovie/%d')", item.ID) }
+					>Delete</a>
+				</td>
+			</tr>
+		}
+	</table>
+}
+
+templ MovieTiles(movies []database.Movie) {
+	<div id="movie-list" class="movie-grid">
+		for _, item := range movies {
+			<a
+				class="movie-tile"
+				data-tooltip={ item.Title }
+				data-placement="bottom"
+				href={ fmt.Sprintf("/movie/%d", item.ID) }
+				title={ item.Title }
+				style="position:relative"
+			>
+				<div>
+					if item.Status == 1 {
+						@fullEye()
+					} else {
+						@closedEye()
+					}
+				</div>
+				<img alt={ item.Title } src={ fmt.Sprintf("/movie/posters/%d.jpg", item.ID) }/>
+			</a>
+		}
+	</div>
+}

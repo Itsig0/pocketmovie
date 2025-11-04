@@ -1,0 +1,39 @@
+package web
+
+templ Apikeyinput(apierror string) {
+	@Html("Please input your TMDB Api key - PocketMovie") {
+		<div class="flex-center" style="height:100vh">
+			<div style="width: 1000px">
+				<h1>API Read Access Token needed</h1>
+				<p>To use this application you need to enter your TMDB API Read Access Token. If you do not have a Token you can get one by creating a TMDB account.</p>
+				<p>It is needed to search movies, pull metadata and stream providers.</p>
+				<form method="POST">
+					<fieldset
+						if apierror != "" {
+							aria-invalid="true"
+							aria-describedby="invalid-helper"
+						}
+						role="group"
+					>
+						<input
+							type="password"
+							name="apikey"
+							placeholder="API Read Access Token"
+							required
+							if apierror != "" {
+								aria-invalid="true"
+							}
+						/>
+						<input
+							type="submit"
+							value="Submit"
+						/>
+					</fieldset>
+					if apierror != "" {
+						<small id="invalid-helper">{ apierror }</small>
+					}
+				</form>
+			</div>
+		</div>
+	}
+}

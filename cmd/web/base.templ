@@ -1,0 +1,156 @@
+package web
+
+import "strings"
+import "git.itsigo.dev/istigo/pocketmovie/internal/apis"
+import "fmt"
+
+templ Html(title string) {
+	<!DOCTYPE html>
+	<html lang="en" data-theme="dark">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>"/>
+			<link rel="stylesheet" href="/assets/css/pico.min.css"/>
+			<link rel="stylesheet" href="/assets/css/main.css"/>
+			<script type="module" src="/assets/js/datastar.js"></script>
+			<script src="/assets/js/modal.js"></script>
+			<title>{ title }</title>
+		</head>
+		<body>
+			{ children... }
+		</body>
+	</html>
+}
+
+templ Base(title string) {
+	@Html(title) {
+		<header>
+			@header()
+		</header>
+		<main class="container">
+			{ children... }
+		</main>
+		// <footer>
+		// @footer()
+		// </footer>
+		<dialog
+			id="search-dialog"
+			data-signals="{id: ''}"
+			data-on-keydown__window="
+                if(evt.key !== 'Escape' || visibleModal === null) return;
+                closeModal(visibleModal);
+                $id = '';
+            "
+		>
+			<article
+				data-on-click__outside="
+                    if (visibleModal === null) return;
+                    closeModal(visibleModal);
+                    $id = '';
+                "
+			>
+				<header>
+					<button
+						aria-label="Close"
+						rel="prev"
+						data-target="search-dialog"
+						data-on-click="$id = ''; toggleModal(event); "
+					></button>
+					<p>
+						<strong>🎬 Add Movie</strong>
+					</p>
+				</header>
+				<div data-show="$id == ''" id="search-container">
+					<form data-on-submit="@post('/apis/tmdb/searchMovie', {contentType: 'form'})" role="search">
+						<input type="search" id="search" name="search" placeholder="Search"/>
+						<input type="submit" value="Search"/>
+					</form>
+					<table class="striped">
+						<tbody id="search-results"></tbody>
+					</table>
+				</div>
+				<div data-show="$id != ''" id="add-options">
+					@AddMovieConfig()
+				</div>
+			</article>
+		</dialog>
+	}
+}
+
+templ header() {
+	<nav class="container">
+		<ul>
+			<li><strong style="font-family: 'Jersey 15'; font-size: 2rem">Pocket Movie</strong></li>
+		</ul>
+		<ul>
+			<li><a href="/">Movies</a></li>
+			<li><a href="/watchlist">Watchlist</a></li>
+			<li><a href="/settings">Settings</a></li>
+		</ul>
+	</nav>
+}
+
+templ SearchMovie(movies []apis.Movie) {
+	<tbody id="search-results">
+		for _, v := range movies {
+			<tr>
+				<td
+					class="add-movie"
+					data-on-click={ fmt.Sprintf("$id = '%d'", v.Id) }
+				>
+					{ v.Title }
+					if v.ReleaseDate != "" {
+						({ strings.Split(v.ReleaseDate, "-")[0] })
+					}
+				</td>
+			</tr>
+		}
+	</tbody>
+}
+
+templ AddMovieConfig() {
+	<form
+		id="addMovieForm"
+		class="add-movie"
+		data-on-submit="@post('/db/addMovie/' + $id, {contentType: 'form'}); closeModal(visibleModal)"
+	>
+		<fieldset>
+			<legend>
+				General 
+			</legend>
+			<input type="checkbox" name="watched" id="watched"/>
+			<label style="padding-bottom: 0.5rem" htmlFor="watched">Watched</label>
+			<div class="grid">
+				<input type="number" name="watchcount" placeholder="Watchcount" aria-label="watchcount"/>
+				<input type="number" name="rating" placeholder="Rating" aria-label="rating"/>
+			</div>
+		</fieldset>
+		<fieldset>
+			<legend>
+				Physical data 
+			</legend>
+			<input type="checkbox" name="owned" id="owned"/>
+			<label>Owned</label>
+			<input type="checkbox" name="ripped" id="ripped"/>
+			<label>Ripped</label>
+		</fieldset>
+		<select name="version" id="version" aria-label="Select physical version..">
+			@MediaSelectOptions()
+		</select>
+		<input id="submitMovieButton" type="submit" value="Add Movie"/>
+	</form>
+}
+
+templ addMovieButton() {
+	<button id="show-modal-dialog" data-target="search-dialog" onCLick="toggleModal(event);" type="button">Add Movie</button>
+}
+
+templ MediaSelectOptions() {
+	<option selected disabled>Select..</option>
+	<option value="">None</option>
+	<option value="DVD">DVD</option>
+	<option value="BD">BD</option>
+	<option value="4KBD">4KBD</option>
+	<option value="DL">DL</option>
+}

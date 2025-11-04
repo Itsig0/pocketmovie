@@ -1,0 +1,11 @@
+.env
+data/
+tmp/
+main
+pico.min.css
+datastar.js
+*_templ.go
+db.go
+models.go
+*.sql.go
+jersey15*
