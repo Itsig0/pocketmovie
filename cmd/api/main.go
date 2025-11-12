@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"fmt"
 	"os"
-	"strconv"
 
+	"git.itsigo.dev/istigo/pocketmovie/internal/apis"
+	"git.itsigo.dev/istigo/pocketmovie/internal/database"
 	"git.itsigo.dev/istigo/pocketmovie/internal/server"
 	"github.com/gofiber/fiber/v3"
-	_ "github.com/joho/godotenv/autoload"
 )
 
 func initial() {
@@ -20,15 +22,27 @@ func initial() {
 }
 
 func main() {
+	var port int
+
+	flag.IntVar(&port, "p", 3000, "Provide a port number")
+
+	flag.Parse()
+
 	initial()
 
-	app := server.New()
+	db := database.Init()
+	app := server.New(db)
+
+	ctx := context.Background()
+
+	// api key to request manager
+	token, _ := db.ListSetting(ctx, 2)
+	apis.Init(token.Value)
 
 	app.RegisterFiberRoutes()
 
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	err := app.Listen(fmt.Sprintf(":%d", port), fiber.ListenConfig{
-		DisableStartupMessage: true,
+	err := app.Listen(fmt.Sprint(":", port), fiber.ListenConfig{
+		DisableStartupMessage: false,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("http server error: %s", err))

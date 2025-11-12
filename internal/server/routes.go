@@ -15,11 +15,17 @@ import (
 	"git.itsigo.dev/istigo/pocketmovie/internal/middleware/apikeychecker"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
+	"github.com/gofiber/fiber/v3/middleware/compress"
 	"github.com/gofiber/fiber/v3/middleware/static"
 )
 
 func (s *FiberServer) RegisterFiberRoutes() {
-	s.App.Use("/apikey", s.apikeyinput)
+
+	s.App.Use(
+		compress.New(compress.Config{
+			Level: compress.LevelBestSpeed, // 1
+		}),
+	)
 
 	s.App.Use("/assets", static.New("./assets", static.Config{
 		FS:     web.Files,
@@ -28,15 +34,14 @@ func (s *FiberServer) RegisterFiberRoutes() {
 
 	s.App.Use("/movie/posters", static.New("./data/img"))
 
+	s.App.Use("/apikey", s.apikeyinput)
+
 	s.App.Use(
 		//basicauth.New(basicauth.Config{
 		//	Users: map[string]string{
 		//		// "doe" hashed using SHA-256
 		//		"john": "{SHA256}eZ75KhGvkY4/t0HfQpNPO1aO0tk6wd908bjUGieTKm8=",
 		//	},
-		//}),
-		//compress.New(compress.Config{
-		//	Level: compress.LevelBestSpeed, // 1
 		//}),
 		apikeychecker.New(apikeychecker.Config{DB: *s.db}),
 	)

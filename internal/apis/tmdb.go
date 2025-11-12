@@ -6,15 +6,16 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
-
-	_ "github.com/joho/godotenv/autoload"
 )
 
 var (
-	token  = os.Getenv("TMDB_API_KEY")
 	apiurl = "https://api.themoviedb.org/3/"
+	token  = ""
 )
+
+func Init(apitoken string) {
+	token = apitoken
+}
 
 func request(requrl string) (*http.Response, []byte) {
 	req, _ := http.NewRequest("GET", apiurl+requrl, nil)

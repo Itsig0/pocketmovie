@@ -11,13 +11,13 @@ type FiberServer struct {
 	db *database.Queries
 }
 
-func New() *FiberServer {
+func New(db *database.Queries) *FiberServer {
 	server := &FiberServer{
 		App: fiber.New(fiber.Config{
 			ServerHeader: "PocketMovie",
 			AppName:      "PocketMovie",
 		}),
-		db: database.Init(),
+		db: db,
 	}
 	return server
 }
