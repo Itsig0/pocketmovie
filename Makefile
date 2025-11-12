@@ -18,4 +18,5 @@ setup:
 	}
 	@curl -o cmd/web/assets/js/datastar.js https://cdn.jsdelivr.net/gh/starfederation/datastar@main/bundles/datastar.js
 	@curl -o cmd/web/assets/css/pico.min.css https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css
+	@mkdir cmd/web/assets/css/fonts
 	@curl -o cmd/web/assets/css/fonts/jersey15.woff2 https://fonts.gstatic.com/s/jersey15/v3/_6_9EDzuROGsUuk2TWjiZYAg.woff2
