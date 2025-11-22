@@ -32,7 +32,7 @@ jobs:
 
       - name: Rename
         run: |
-          cp tmp/main tmp/pocketmovie
+          cp tmp/main pocketmovie
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
