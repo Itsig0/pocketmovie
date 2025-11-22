@@ -5,7 +5,7 @@ run:
 build:
 	@templ generate
 	@sqlc generate
-	@go build -o tmp/main cmd/api/main.go
+	@GOAMD64="v1" GOARCH="amd64" GOOS="linux" go build -ldflags="-s -w" -o tmp/main cmd/api/main.go
 
 setup:
 	@command -v templ >/dev/null 2>&1 || { \
