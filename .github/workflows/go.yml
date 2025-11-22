@@ -30,6 +30,10 @@ jobs:
         run: |
           make build
 
+      - name: Rename
+        run: |
+          cp tmp/main tmp/pocketmovie
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
